@@ -33,6 +33,7 @@ import com.vaadin.flow.function.SerializableRunnable;
  */
 @NpmPackage(value = "@vaadin/tooltip", version = "23.3.0-alpha1")
 @JsModule("@vaadin/tooltip/src/vaadin-tooltip.js")
+@JsModule("./tooltip.ts")
 public class Tooltip implements Serializable {
 
     /**
@@ -69,6 +70,24 @@ public class Tooltip implements Serializable {
             return position;
         }
     }
+
+    static Integer defaultHideDelay;
+
+    static void applyDefaultDelays() {
+        var page = UI.getCurrent().getElement();
+
+        if (defaultHideDelay != null) {
+            page.executeJs("window.Vaadin.Flow.tooltip.setDefaultHideDelay($0)", defaultHideDelay);
+        }
+    }
+
+    static {
+        var page = UI.getCurrent().getElement();
+        // TODO: applyDefaultDelays needs to be called on browser refresh.
+        // Seems an attach listener on the UI doesn't work.
+        page.addAttachListener(e -> applyDefaultDelays());
+    }
+
 
     /**
      * Creates a tooltip for the given element.
@@ -292,5 +311,17 @@ public class Tooltip implements Serializable {
      */
     public boolean isOpened() {
         return tooltipElement.getProperty("opened", false);
+    }
+
+    /**
+     * Sets the default hide delay to be used by all tooltip instances, except
+     * for those that have hide delay configured using property.
+     *
+     * @param hideDelay
+     *            the delay in milliseconds
+     */
+    public static void setDefaultHideDelay(int hideDelay) {
+        defaultHideDelay = hideDelay;
+        applyDefaultDelays();
     }
 }
